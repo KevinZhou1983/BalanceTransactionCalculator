@@ -2,10 +2,10 @@ import sqlite3
 
 class SqlLiteUtil:
     def __init__(self):
-        self.conn = sqlite3.connect('C:\\Users\\kzhou\OneDrive - GREEN DOT CORPORATION\\Documents\\GitRepo\\MyCode\\AIWEB\\DB\\OpenAI.db')
-        # self.conn = sqlite3.connect('/root/myai/DB/OpenAI.db')
+        # self.conn = sqlite3.connect('C:\\Users\\kzhou\OneDrive - GREEN DOT CORPORATION\\Documents\\GitRepo\\MyCode\\AIWEB\\DB\\OpenAI.db')
+        self.conn = sqlite3.connect('/root/myai/DB/OpenAI.db')
         # self.conn = sqlite3.connect('OpenAI.db')
-        self.conn.row_factory = sqlite3.Row 
+        self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
         # self.cursor.execute('''CREATE TABLE IF NOT EXISTS users 
         #         (id INTEGER PRIMARY KEY, email TEXT, password INTEGER)''')
