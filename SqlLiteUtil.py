@@ -44,8 +44,8 @@ class SqlLiteUtil:
         # self.cursor.execute("update ConsumeTransactionDetail set transactionStatus=3 where id in ({}) ".format(','.join('?'*len(params))),params)
         # self.conn.commit()
     
-    def updateCustomerBalance(self,params):
-        self.cursor.execute("update customer set balance=balance-? where userid = ?",params)
+    def updateCustomerBalance(self,userid,amount,cnyRate):
+        self.cursor.execute("update customer set balance=(balance-{}*{}) where userid = {}".format(amount,cnyRate,userid))
         # self.conn.commit()
 
 

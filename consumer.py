@@ -2,8 +2,10 @@
 from SqlLiteUtil import SqlLiteUtil        
 import datetime
 import sqlite3
-
-
+import requests
+import logging
+logger = logging.getLogger('log')
+logging.basicConfig(level=logging.INFO)
 def calculateTransactountAmountForPendingChargeRecords():
     db = SqlLiteUtil()
     query="""
@@ -93,7 +95,8 @@ def consumeTransactionForChargeFee_db(rows):
             db.cursor.execute("BEGIN;")
             db.insertConsumeTransaction(params)
             db.updateConsumeTransactiondetails(params2)
-            db.updateCustomerBalance((transactionAmount,userid))
+            cnyRates=getCNYRates(userid)
+            db.updateCustomerBalance(userid,transactionAmount,cnyRates)
             db.conn.commit()
         except sqlite3.Error as e:
             print('sqlite3.Error occurred:', e.args[0])
@@ -104,13 +107,58 @@ def consumeTransactionForChargeFee_db(rows):
             db.conn.close()
 
 
+def getlevel(userid):
+    db = SqlLiteUtil()
+    query=f"""
+            select level from user where id={userid}
+        """
+    rows=db.query(query)
+    return rows[0]['level']
 
+def getCNYRates(userid):
+    level=0
+    level=getlevel(userid)
+    # 替换为您的API密钥
+    api_key = '33af2eb3a7a80e1a2366ab18'
+    # 您可以选择任何一个基准货币
+    base_currency = 'USD'
 
-   
+    # 构建请求URL
+    url = f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{base_currency}'
+  
+
+    # 发送请求
+    response = requests.get(url,verify=False)
+
+    # 检查响应状态码
+    if response.status_code == 200:
+        # 解析JSON数据
+        data = response.json()
+        # 输出汇率信息
+        rate=float(data['conversion_rates']['CNY'])
+        logging.info(f'1 {base_currency} = {rate} CNY')        
+    else:
+        result="Failed to get exchange rates. Status code:{}".format(response.status_code)
+        logging.error(result)
+        rate=7.9
+        return rate
+    if level==0:
+        rate= rate*1.3
+    elif level==1:
+        rate= rate*1.2
+    elif level==2:
+        rate= rate*1.1
+    else:
+        rate= rate*1
+    return rate
   
 
 def main(): 
-
+    # db = SqlLiteUtil()  
+    # cnyRates=getCNYRates(17)
+    # db.cursor.execute("BEGIN;")
+    # db.updateCustomerBalance(17,1,cnyRates)
+    # db.conn.commit()
     # 一个事务：
     # addConsumeTransactiondetails，
     # updateChat history
@@ -125,7 +173,7 @@ def main():
     #一个事务:
     #addConsumeTransactionForChargeFee,
     #update ConsumeTransactiondetails satus
-    #update balance 
+    # #update balance 
 
     results2=getConsumeTransactionDetailsForChargeFee()
     consumeTransactionForChargeFee_db(results2)
